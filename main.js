@@ -23,6 +23,8 @@ function start(Ammo){
         createBall(Ammo);
         createMaskBall(Ammo);
         createJointObjects(Ammo);
+        createHemisphere(Ammo);
+        createTable(Ammo)
     
         renderFrame(Ammo);
     }
@@ -55,8 +57,8 @@ function setupGraphics(){
 
     //create camera
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 5000 );
-    camera.position.set( 0, 30, 70 );
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    camera.position.set( 50, 50, 80 );
+    camera.lookAt(new THREE.Vector3(20, 0, -20));
 
     //Add hemisphere light
     let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.1 );
@@ -123,7 +125,7 @@ function createBlock(Ammo){
     let mass = 0;
 
     //threeJS Section
-    let blockPlane = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial({color: 0xa0afa4}));
+    let blockPlane = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial({color: 0xa0afa4})); //cinza
 
     blockPlane.position.set(pos.x, pos.y, pos.z);
     blockPlane.scale.set(scale.x, scale.y, scale.z);
@@ -329,8 +331,110 @@ function createJointObjects(Ammo){
 
 }
 
+function createHemisphere(Ammo){
+
+    let pos = {x: 0, y: 0, z: 0};
+    let radius = 5; // Radius of the hemisphere
+    let widthSegments = 32; // Increase for smoother curvature
+    let heightSegments = 16; // Adjust to control the detail level
+    let phiStart = 0; // Start angle for the hemisphere
+    let phiLength = Math.PI; // Only half of the sphere (hemisphere) 
+    let quat = {x: 0, y: 0, z: 0, w: 1};
+    let mass = 5;
+
+    //threeJS Section
+    let hemisphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments, phiStart, phiLength); //amarelo
+    let hemisphereMaterial = new THREE.MeshBasicMaterial({color: 0xf6f02c, wireframe: true})
+    let hemisphere = new THREE.Mesh(hemisphereGeometry, hemisphereMaterial);
+    hemisphere.rotateZ(Math.PI); // Rotate to align the hemisphere properly
+    hemisphere.position.set(pos.x, pos.y, pos.z);
+    
+    hemisphere.castShadow = true;
+    hemisphere.receiveShadow = true;
+
+    scene.add(hemisphere);
+
+    //Ammojs Section
+    let transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+    transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    let motionState = new Ammo.btDefaultMotionState( transform );
+
+    let colShape = new Ammo.btSphereShape( radius, widthSegments, heightSegments, phiStart, phiLength );
+    colShape.setMargin( 0.05 );
+
+    let localInertia = new Ammo.btVector3( 0, 0, 0 );
+    colShape.calculateLocalInertia( mass, localInertia );
+
+    let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+    let body = new Ammo.btRigidBody( rbInfo );
 
 
+    physicsWorld.addRigidBody( body, colGroupRedBall, colGroupPlane | colGroupGreenBall );
+    
+    hemisphere.userData.physicsBody = body;
+    rigidBodies.push(hemisphere);
+}
+
+function createTable(Ammo){
+
+    let pos = {x: 50, y: 0, z: 0};
+    let quat = {x: 0, y: 0, z: 0, w: 1};
+    let tableTopDimensions = {x: 50, y: 2, z: 30};
+    let tableColumnDimensions = {x: 2, y: 25, z: 2};
+    let mass = 5
+
+    // Create the table top
+    let tableTopGeometry = new THREE.BoxGeometry(tableTopDimensions.x, tableTopDimensions.y, tableTopDimensions.z);
+    let tableMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Marrom escuro
+    let tableTopMesh = new THREE.Mesh(tableTopGeometry, tableMaterial);    
+
+    tableTopMesh.position.y = pos.y; // Ajuste da posição para que o topo da mesa fique na altura desejada
+    tableTopMesh.position.x = pos.x; // colocando a mesa ao lado do plano
+    scene.add(tableTopMesh);
+
+    // create the table columns
+    let tableColumnGeometry = new THREE.BoxGeometry(tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z);
+    
+    let tableColumnMesh1 = new THREE.Mesh(tableColumnGeometry, tableMaterial);
+    tableColumnMesh1.position.set(-22 + pos.x, -13, -13); // Ajuste a posição da perna 1
+    scene.add(tableColumnMesh1);
+
+    let tableColumnMesh2 = new THREE.Mesh(tableColumnGeometry, tableMaterial);
+    tableColumnMesh2.position.set(22 + pos.x, -13, -13); // Ajuste a posição da perna 2
+    scene.add(tableColumnMesh2);
+
+    let tableColumnMesh3 = new THREE.Mesh(tableColumnGeometry, tableMaterial);
+    tableColumnMesh3.position.set(-22 + pos.x, -13, 13); // Ajuste a posição da perna 3
+    scene.add(tableColumnMesh3);
+
+    let tableColumnMesh4 = new THREE.Mesh(tableColumnGeometry, tableMaterial);
+    tableColumnMesh4.position.set(22 + pos.x, -13, 13); // Ajuste a posição da perna 4
+    scene.add(tableColumnMesh4);
+
+    //Physics of the table top
+    let transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+    transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    let motionState = new Ammo.btDefaultMotionState( transform );   
+
+    let tableTopColShape = new Ammo.btBoxShape( new Ammo.btVector3( tableTopDimensions.x, tableTopDimensions.y, tableTopDimensions.z) );
+    tableTopColShape.setMargin( 0.05 );
+
+    let localInertia = new Ammo.btVector3( 0, 0, 0 );
+    tableTopColShape.calculateLocalInertia( mass, localInertia );
+
+    let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, tableTopColShape, localInertia );
+    let blockBody = new Ammo.btRigidBody( rbInfo );
+
+    physicsWorld.addRigidBody( blockBody, colGroupGreenBall, colGroupPlane | colGroupRedBall );
+    
+    tableTopMesh.userData.physicsBody = blockBody;
+    rigidBodies.push(tableTopMesh);
+
+}
 
 function updatePhysics( deltaTime, Ammo ){
 
