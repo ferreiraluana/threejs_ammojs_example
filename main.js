@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import Ammo from './js/ammo';
 
+
 //variable declaration section
 let physicsWorld, scene, camera, renderer, rigidBodies = [];
 let colGroupPlane = 1, colGroupRedBall = 2, colGroupGreenBall = 4
 let tmpTrans, clock, deltaTime = null
+
+
 
 //Ammojs Initialization
 Ammo().then((Ammo) => {
@@ -24,7 +27,8 @@ function start(Ammo){
         createMaskBall(Ammo);
         createJointObjects(Ammo);
         createHemisphere(Ammo);
-        createTable(Ammo)
+        createTable(Ammo);
+        createFloor(Ammo);
     
         renderFrame(Ammo);
     }
@@ -394,7 +398,7 @@ function createTable(Ammo){
     tableTopMesh.position.x = pos.x; // colocando a mesa ao lado do plano
     scene.add(tableTopMesh);
 
-    // create the table columns
+    // Create the table columns
     let tableColumnGeometry = new THREE.BoxGeometry(tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z);
     
     let tableColumnMesh1 = new THREE.Mesh(tableColumnGeometry, tableMaterial);
@@ -413,7 +417,7 @@ function createTable(Ammo){
     tableColumnMesh4.position.set(22 + pos.x, -13, 13); // Ajuste a posição da perna 4
     scene.add(tableColumnMesh4);
 
-    //Physics of the table top
+    // Physics of the table top
     let transform = new Ammo.btTransform();
     transform.setIdentity();
     transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
@@ -429,12 +433,136 @@ function createTable(Ammo){
     let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, tableTopColShape, localInertia );
     let blockBody = new Ammo.btRigidBody( rbInfo );
 
-    physicsWorld.addRigidBody( blockBody, colGroupGreenBall, colGroupPlane | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody, colGroupPlane, colGroupGreenBall  | colGroupRedBall );
     
     tableTopMesh.userData.physicsBody = blockBody;
     rigidBodies.push(tableTopMesh);
 
+
+    // Physics of tableColumns
+    let transform1 = new Ammo.btTransform();
+    let transform2 = new Ammo.btTransform();
+    let transform3 = new Ammo.btTransform();
+    let transform4 = new Ammo.btTransform();
+
+    transform1.setIdentity();
+    transform2.setIdentity();
+    transform3.setIdentity();
+    transform4.setIdentity();
+
+    transform1.setOrigin( new Ammo.btVector3( -22 + pos.x, -13, -13) );
+    transform2.setOrigin( new Ammo.btVector3( 22 + pos.x, -13, -13) );
+    transform3.setOrigin( new Ammo.btVector3( -22 + pos.x, -13, 13) );
+    transform4.setOrigin( new Ammo.btVector3( 22 + pos.x, -13, 13) );
+
+    transform1.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    transform2.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    transform3.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    transform4.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+
+    let motionState1 = new Ammo.btDefaultMotionState( transform1);   
+    let motionState2 = new Ammo.btDefaultMotionState( transform2); 
+    let motionState3 = new Ammo.btDefaultMotionState( transform3); 
+    let motionState4 = new Ammo.btDefaultMotionState( transform4); 
+
+    let tableColumnMesh1Shape = new Ammo.btBoxShape( new Ammo.btVector3( tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z) );
+    tableColumnMesh1Shape.setMargin( 0.05 );
+    let tableColumnMesh2Shape = new Ammo.btBoxShape( new Ammo.btVector3( tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z) );
+    tableColumnMesh2Shape.setMargin( 0.05 );
+    let tableColumnMesh3Shape = new Ammo.btBoxShape( new Ammo.btVector3( tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z) );
+    tableColumnMesh3Shape.setMargin( 0.05 );
+    let tableColumnMesh4Shape = new Ammo.btBoxShape( new Ammo.btVector3( tableColumnDimensions.x, tableColumnDimensions.y, tableColumnDimensions.z) );
+    tableColumnMesh4Shape.setMargin( 0.05 );
+
+    let localInertia1 = new Ammo.btVector3( 0, 0, 0 );
+    tableColumnMesh1Shape.calculateLocalInertia( mass, localInertia1 );
+    tableColumnMesh2Shape.calculateLocalInertia( mass, localInertia1 );
+    tableColumnMesh3Shape.calculateLocalInertia( mass, localInertia1 );
+    tableColumnMesh4Shape.calculateLocalInertia( mass, localInertia1 );
+
+    let rbInfo1 = new Ammo.btRigidBodyConstructionInfo( mass, motionState1, tableColumnMesh1Shape, localInertia1 );
+    let rbInfo2 = new Ammo.btRigidBodyConstructionInfo( mass, motionState2, tableColumnMesh2Shape, localInertia1 );
+    let rbInfo3 = new Ammo.btRigidBodyConstructionInfo( mass, motionState3, tableColumnMesh3Shape, localInertia1 );
+    let rbInfo4 = new Ammo.btRigidBodyConstructionInfo( mass, motionState4, tableColumnMesh4Shape, localInertia1 );
+    let blockBody1 = new Ammo.btRigidBody( rbInfo1 );
+    let blockBody2 = new Ammo.btRigidBody( rbInfo2 );
+    let blockBody3 = new Ammo.btRigidBody( rbInfo3 );
+    let blockBody4 = new Ammo.btRigidBody( rbInfo4 );
+
+    physicsWorld.addRigidBody( blockBody1, colGroupPlane, colGroupGreenBall | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody2, colGroupPlane, colGroupGreenBall | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody3, colGroupPlane, colGroupGreenBall | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody4, colGroupPlane, colGroupGreenBall | colGroupRedBall );
+
+    tableColumnMesh1.userData.physicsBody = blockBody1;
+    tableColumnMesh2.userData.physicsBody = blockBody2;
+    tableColumnMesh3.userData.physicsBody = blockBody3;
+    tableColumnMesh4.userData.physicsBody = blockBody4;
+    rigidBodies.push(tableColumnMesh1);
+    rigidBodies.push(tableColumnMesh2);
+    rigidBodies.push(tableColumnMesh3);
+    rigidBodies.push(tableColumnMesh4);
+
+
 }
+
+function createFloor(Ammo){
+    
+    let pos = {x: 40, y: -40, z: -40};
+    let scale = {x: 200, y: 2, z: 200};
+    let quat = {x: 0, y: 0, z: 0, w: 1};
+    let mass = 0;
+
+    //threeJS Section
+    let blockPlane = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial({color: 0xFAFAFA})); //cinza
+
+    blockPlane.position.set(pos.x, pos.y, pos.z);
+    blockPlane.scale.set(scale.x, scale.y, scale.z);
+
+    blockPlane.castShadow = true;
+    blockPlane.receiveShadow = true;
+
+    scene.add(blockPlane);
+
+
+    //Ammojs Section
+    let transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+    transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+    let motionState = new Ammo.btDefaultMotionState( transform );
+
+    let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+    colShape.setMargin( 0.05 );
+
+    let localInertia = new Ammo.btVector3( 0, 0, 0 );
+    colShape.calculateLocalInertia( mass, localInertia );
+
+    let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+    let body = new Ammo.btRigidBody( rbInfo );
+
+
+    physicsWorld.addRigidBody( body, colGroupPlane, colGroupRedBall | colGroupGreenBall);
+}
+
+function createText(Ammo){
+    // Crie a geometria de texto
+    const textGeometry = new THREE.TextGeometry('Hello, Three.js!', {
+        font: 'https://cdn.jsdelivr.net/npm/three/examples/fonts/helvetiker_regular.typeface.json', // Caminho para o arquivo de fonte
+        size: 1,
+        height: 0.1
+    });
+
+    // Crie um material básico para o texto
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    // Crie uma malha com a geometria de texto e o material
+    const textMesh = new THREE.Mesh(textGeometry, material);
+
+    // Adicione a malha à cena
+    scene.add(textMesh);
+}
+
 
 function updatePhysics( deltaTime, Ammo ){
 
