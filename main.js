@@ -169,7 +169,7 @@ function createBall(Ammo){
     let mass = 1;
 
     //threeJS Section
-    let ball = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshPhongMaterial({color: 0xff0505}));
+    let ball = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshPhongMaterial({color: 0xff0505})); // vermelho
 
     ball.position.set(pos.x, pos.y, pos.z);
     
@@ -433,7 +433,7 @@ function createTable(Ammo){
     let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, tableTopColShape, localInertia );
     let blockBody = new Ammo.btRigidBody( rbInfo );
 
-    physicsWorld.addRigidBody( blockBody, colGroupPlane, colGroupGreenBall  | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody, colGroupRedBall, colGroupPlane | colGroupGreenBall );
     
     tableTopMesh.userData.physicsBody = blockBody;
     rigidBodies.push(tableTopMesh);
@@ -489,10 +489,10 @@ function createTable(Ammo){
     let blockBody3 = new Ammo.btRigidBody( rbInfo3 );
     let blockBody4 = new Ammo.btRigidBody( rbInfo4 );
 
-    physicsWorld.addRigidBody( blockBody1, colGroupPlane, colGroupGreenBall | colGroupRedBall );
-    physicsWorld.addRigidBody( blockBody2, colGroupPlane, colGroupGreenBall | colGroupRedBall );
-    physicsWorld.addRigidBody( blockBody3, colGroupPlane, colGroupGreenBall | colGroupRedBall );
-    physicsWorld.addRigidBody( blockBody4, colGroupPlane, colGroupGreenBall | colGroupRedBall );
+    physicsWorld.addRigidBody( blockBody1, colGroupRedBall, colGroupPlane | colGroupGreenBall );
+    physicsWorld.addRigidBody( blockBody2, colGroupRedBall, colGroupPlane | colGroupGreenBall );
+    physicsWorld.addRigidBody( blockBody3, colGroupRedBall, colGroupPlane | colGroupGreenBall );
+    physicsWorld.addRigidBody( blockBody4, colGroupRedBall, colGroupPlane | colGroupGreenBall );
 
     tableColumnMesh1.userData.physicsBody = blockBody1;
     tableColumnMesh2.userData.physicsBody = blockBody2;
